@@ -1,0 +1,78 @@
+read_restart          Restart_files/example_fluid.restart
+
+variable Te equal 7.9
+variable lambda_d equal 193e-6 # kappa ~ 1.77
+
+variable pressure equal 11 # Pa, can be varied
+
+variable dust_radius equal 3e-6 # um
+variable base_temp equal 300
+
+###### yukawa potential ################
+variable kappa equal 1/v_lambda_d
+variable kappae equal v_kappa*sqrt(v_base_temp/(v_Te*11600)) #electron screening length
+print "kappae: ${kappae}"
+variable cutoff equal 7*v_lambda_d #cutoff distance for potential 
+variable Mth equal 0.7
+
+variable wd equal 55 # can be varied
+variable wake_z equal 0.2 # can be varied
+
+variable wake_delta equal v_wd*1e-6 # measured in um
+print "wake delta: ${wake_delta}"
+pair_style coul/string ${kappa} ${kappae} ${cutoff} ${wake_z} ${wake_delta} ${Mth} ${dust_radius}
+pair_coeff * * ${cutoff}
+
+neighbor 1e-4 bin #LJ units was 30 um, default SI is 1 mm
+neigh_modify one 10000
+
+
+# langevin thermostat and epstein damping
+variable l_temp equal 7000 # K
+
+variable final_temp equal 1200 # K, can be varied
+
+variable coeff equal 4.329e-6 #4.329e-6 neon, 6.0899e-6 argon
+variable gammaep equal (v_coeff*v_pressure)/v_dust_radius
+variable gamma equal 1.0/v_gammaep
+fix high_damping  all langevin ${l_temp} ${l_temp} ${gamma} 38533 tally yes
+fix_modify high_damping energy yes  # adds to potential energy
+
+
+# print this information to screen every 100 steps
+thermo_style custom step temp press pe ke epair etotal
+thermo 100
+
+fix moveatoms all nve
+
+# every increment of time is 1 us
+timestep 1e-6
+run 1000
+
+# format input parameters to the same number of digits
+variable form_wc format wake_z %.3f
+variable form_wd format wd %.3f
+variable form_p format pressure %.3f
+variable form_t format final_temp %.3f
+
+
+# save the temperature value every 0.5 second
+fix st_temp all print 500000 '$(step), $(temp)' file StringsTest_Press_${form_p}_T_${form_t}_Wc_${form_wc}_Wd_${form_wd}_temp.csv
+
+# changing temperature using the langevin thermostat
+unfix high_damping
+fix damping all langevin ${final_temp} ${final_temp} ${gamma} 3248 tally yes
+fix_modify damping energy yes
+
+# run for 30 seconds
+run 30000000
+
+# file name has the input parameter values
+# save the position and velocity data every 1 ms
+dump data all custom 1000 StringsTest_Press_${form_p}_T_${form_t}_Thresh_${form_thr}_Wc_${form_wc}_Wd_${form_wd}.csv id x y z vx vy vz
+
+# run for 1 second
+run 1000000
+
+# save the state of the simulation
+write_restart string_crystal.restart
