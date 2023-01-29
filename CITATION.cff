@@ -1,0 +1,25 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: Strings Extension
+message: >-
+  Custom extension to LAMMPS source code to simulate string
+  formation in complex plasmas. 
+type: software
+authors:
+  - given-names: Eshita
+    family-names: Joshi
+    email: eshita.joshi@dlr.de
+    affiliation: DLR
+    orcid: 'https://orcid.org/0000-0001-8557-1141'
+  - given-names: Mierk
+    family-names: Schwabe
+    email: mierk.schwabe@dlr.de
+    affiliation: DLR
+    orcid: 'https://orcid.org/0000-0001-6565-5890'
+repository-code: 'https://github.com/EshitaJoshi/strings_extension'
+repository: 'https://zenodo.org/record/5871983'
+license: CC-BY-4.0
+commit: e7441a4
+date-released: '2022-01-18'
